@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>CLASH OF GUARDIANS: HYPER BATTLE 2000 (MvC2 Arcade Tribute)</title>
   <style>
     * {
@@ -11,6 +11,7 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: manipulation;
     }
     body {
       background: #05020c;
@@ -29,7 +30,7 @@
       width: 100%;
       max-width: 1280px;
       aspect-ratio: 16 / 9;
-      max-height: 100vh;
+      max-height: 90vh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -45,7 +46,6 @@
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
-    /* CRT Scanline & Phosphor Overlay */
     .crt-overlay {
       position: absolute;
       top: 0;
@@ -66,51 +66,105 @@
       box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.7);
       opacity: 1;
       transition: opacity 0.3s ease;
+      z-index: 5;
     }
     .crt-overlay.disabled {
       opacity: 0;
     }
-    /* Instruction Bar */
-    #controls-bar {
+    #rematch-banner {
       position: absolute;
-      bottom: 6px;
+      top: 58%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 20;
+    }
+    .btn-rematch {
+      cursor: pointer;
+      background: linear-gradient(180deg, #ffea00, #ff5500);
+      color: #000;
+      font-family: inherit;
+      font-size: 20px;
+      font-weight: 900;
+      font-style: italic;
+      padding: 12px 32px;
+      border-radius: 30px;
+      border: 3px solid #fff;
+      box-shadow: 0 0 25px rgba(255, 234, 0, 0.8), 0 6px 0 #992200;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: pulseBtn 1s infinite alternate;
+    }
+    .btn-rematch:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 10px rgba(255, 234, 0, 0.8), 0 2px 0 #992200;
+    }
+    @keyframes pulseBtn {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+    #touch-controls {
+      position: absolute;
+      bottom: 8px;
+      width: 96%;
       display: flex;
-      gap: 14px;
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: rgba(255, 255, 255, 0.85);
-      background: rgba(8, 2, 22, 0.85);
-      padding: 5px 16px;
-      border-radius: 20px;
-      border: 1px solid rgba(0, 240, 255, 0.4);
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
-      z-index: 10;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 15;
+      pointer-events: none;
+    }
+    .touch-group {
+      display: flex;
+      gap: 8px;
       pointer-events: auto;
     }
-    .ctrl-key {
-      color: #ffe600;
-      font-weight: bold;
-      background: rgba(255, 255, 255, 0.12);
-      padding: 1px 6px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 230, 0, 0.5);
-    }
-    .btn-toggle {
+    .touch-btn {
+      touch-action: manipulation;
       cursor: pointer;
-      background: #e8006f;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 2px 8px;
+      font-family: inherit;
+      font-weight: 900;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
+      color: #ffffff;
+      background: rgba(14, 5, 30, 0.85);
+      padding: 10px 14px;
+      font-size: 13px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+      transition: transform 0.08s, background 0.08s;
+      min-width: 48px;
+      text-align: center;
+    }
+    .touch-btn:active, .touch-btn.pressed {
+      transform: scale(0.92);
+      background: #ffea00;
+      color: #000;
+      border-color: #fff;
+    }
+    .btn-atk-light { border-color: #00f6ff; }
+    .btn-atk-heavy { border-color: #ff0077; }
+    .btn-atk-super { border-color: #ffea00; background: rgba(255, 234, 0, 0.25); }
+    #top-bar {
+      position: absolute;
+      top: 6px;
+      right: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 15;
+    }
+    .btn-util {
+      cursor: pointer;
       font-family: inherit;
       font-size: 10px;
-      font-weight: bold;
-      text-transform: uppercase;
-      box-shadow: 0 0 8px #e8006f;
-      transition: transform 0.1s;
-    }
-    .btn-toggle:active {
-      transform: scale(0.92);
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(10, 2, 24, 0.8);
+      color: #fff;
     }
   </style>
 </head>
@@ -118,29 +172,35 @@
   <div id="game-container">
     <canvas id="viewport" width="640" height="360"></canvas>
     <div id="crt" class="crt-overlay"></div>
-    <div id="controls-bar">
-      <span><span class="ctrl-key">← →</span> WALK / DASH</span>
-      <span><span class="ctrl-key">SPACE / ↑</span> JUMP</span>
-      <span><span class="ctrl-key">↓</span> CROUCH</span>
-      <span><span class="ctrl-key">Z</span> LIGHT ATK</span>
-      <span><span class="ctrl-key">X</span> HEAVY ATK</span>
-      <span><span class="ctrl-key">C</span> HYPER COMBO</span>
-      <span><span class="ctrl-key">V</span> ASSIST CALL</span>
-      <button id="toggle-crt" class="btn-toggle">CRT ON/OFF</button>
-      <button id="toggle-ai" class="btn-toggle" style="background:#00d9ff; box-shadow:0 0 8px #00d9ff; color:#021020;">AI: AUTO</button>
+
+    <div id="top-bar">
+      <button id="btn-restart-now" class="btn-util" style="background:#ff7700; color:#fff;">🔄 RESTART MATCH</button>
+      <button id="toggle-crt" class="btn-util">CRT: ON/OFF</button>
+      <button id="toggle-ai" class="btn-util" style="background:#00d9ff; color:#000;">AI: AUTO</button>
+    </div>
+
+    <div id="rematch-banner">
+      <button id="btn-rematch" class="btn-rematch">⚔️ FIGHT AGAIN (REMATCH) ⚔️</button>
+      <span style="font-size:12px; color:#ffe600; text-shadow:0 0 4px #000;">Or Press SPACE / ENTER</span>
+    </div>
+
+    <div id="touch-controls">
+      <div class="touch-group">
+        <button id="t-left" class="touch-btn">◀ LEFT</button>
+        <button id="t-jump" class="touch-btn">▲ JUMP</button>
+        <button id="t-right" class="touch-btn">RIGHT ▶</button>
+      </div>
+
+      <div class="touch-group">
+        <button id="t-light" class="touch-btn btn-atk-light">Z: LIGHT</button>
+        <button id="t-heavy" class="touch-btn btn-atk-heavy">X: HEAVY</button>
+        <button id="t-super" class="touch-btn btn-atk-super">C: HYPER</button>
+        <button id="t-assist" class="touch-btn">V: ASSIST</button>
+      </div>
     </div>
   </div>
 
   <script>
-  /**
-   * ============================================================================
-   * CLASH OF GUARDIANS: HYPER BATTLE 2000
-   * Capcom MvC2 Dreamcast/Arcade Era 2D Fighting Game Recreation
-   * Single-file Procedural Pixel Art, Parallax Stages, Sound Synthesizer, & HUD
-   * ============================================================================
-   */
-
-  // 1. CONFIGURATION & COLOR PALETTES
   const CONFIG = {
     INTERNAL_WIDTH: 640,
     INTERNAL_HEIGHT: 360,
@@ -148,97 +208,47 @@
     GRAVITY: 0.72,
     TIMER_START: 99,
     MAX_HEALTH: 1000,
-    MAX_METER: 300 // 3 bars (100 per Level)
+    MAX_METER: 300
   };
 
   const PALETTE = {
     OUTLINE: '#090314',
     WHITE: '#ffffff',
     BLACK: '#020008',
-    
-    // Kai (Volt-Striker): Electric Cyan, Gold, Navy, Hot Pink
     KAI: {
-      SKIN_HI: '#ffe0bd',
-      SKIN_BASE: '#f3b282',
-      SKIN_SHADOW: '#aa5d3b',
-      HAIR_HI: '#fffb96',
-      HAIR_BASE: '#00f6ff',
-      HAIR_SHADOW: '#007bb3',
-      GI_HI: '#ffffff',
-      GI_BASE: '#d6e6f5',
-      GI_SHADOW: '#4c6589',
-      GI_DEEP: '#1f2e46',
-      BELT_BASE: '#ff1493',
-      BELT_SHADOW: '#8c004a',
-      GLOVE_HI: '#ffea00',
-      GLOVE_BASE: '#ff7700',
-      GLOVE_SHADOW: '#991100',
-      ENERGY: '#00ffff',
-      ENERGY_CORE: '#ffffff'
+      SKIN_HI: '#ffe0bd', SKIN_BASE: '#f3b282', SKIN_SHADOW: '#aa5d3b',
+      HAIR_HI: '#fffb96', HAIR_BASE: '#00f6ff', HAIR_SHADOW: '#007bb3',
+      GI_HI: '#ffffff', GI_BASE: '#d6e6f5', GI_SHADOW: '#4c6589', GI_DEEP: '#1f2e46',
+      BELT_BASE: '#ff1493', BELT_SHADOW: '#8c004a',
+      GLOVE_HI: '#ffea00', GLOVE_BASE: '#ff7700', GLOVE_SHADOW: '#991100',
+      ENERGY: '#00ffff'
     },
-
-    // Vexa (Crimson Valkyrie): Ruby Magenta, Obsidian Purple, Crimson
     VEXA: {
-      SKIN_HI: '#ffffff',
-      SKIN_BASE: '#eac8b8',
-      SKIN_SHADOW: '#93605c',
-      HAIR_HI: '#ff80bf',
-      HAIR_BASE: '#ff0077',
-      HAIR_SHADOW: '#88003a',
-      ARMOR_HI: '#b066ff',
-      ARMOR_BASE: '#491b7e',
-      ARMOR_SHADOW: '#180731',
-      CAPE_HI: '#ff3b30',
-      CAPE_BASE: '#b30018',
-      CAPE_SHADOW: '#4d0007',
-      ENERGY: '#ff0055',
-      ENERGY_CORE: '#ffeef5'
+      SKIN_HI: '#ffffff', SKIN_BASE: '#eac8b8', SKIN_SHADOW: '#93605c',
+      HAIR_HI: '#ff80bf', HAIR_BASE: '#ff0077', HAIR_SHADOW: '#88003a',
+      ARMOR_HI: '#b066ff', ARMOR_BASE: '#491b7e', ARMOR_SHADOW: '#180731',
+      CAPE_HI: '#ff3b30', CAPE_BASE: '#b30018', CAPE_SHADOW: '#4d0007',
+      ENERGY: '#ff0055'
     },
-
     STAGE: {
-      SKY_TOP: '#0d0426',
-      SKY_MID: '#4a154b',
-      SKY_LOW: '#d4422e',
-      SKY_HORIZON: '#ffb338',
-      WHEEL_LIGHTS: ['#ff0055', '#00ffff', '#ffe600', '#00ff66', '#b000ff'],
-      BOOTH_CANOPY_1: '#ff0055',
-      BOOTH_CANOPY_2: '#00e1ff',
-      NEON_GOLD: '#ffcc00',
-      GROUND_TOP: '#1a0d33',
-      GROUND_BASE: '#0f0720',
-      TILE_ACCENT: '#ff0077'
+      SKY_TOP: '#0d0426', SKY_MID: '#4a154b', SKY_LOW: '#d4422e', SKY_HORIZON: '#ffb338',
+      WHEEL_LIGHTS: ['#ff0055', '#00ffff', '#ffe600', '#00ff66', '#b000ff']
     },
-
     HUD: {
-      LIFE_GREEN: '#28e040',
-      LIFE_YELLOW: '#ffd000',
-      LIFE_RED: '#ff1b34',
-      LIFE_GHOST: '#ff3019',
-      LIFE_BG: '#1a052b',
-      FRAME_GOLD: '#f5c518',
-      FRAME_SILVER: '#b8cddb',
-      FRAME_PURPLE: '#260f38',
-      METER_CYAN: '#00f6ff',
-      METER_BLUE: '#0055ff',
-      METER_FLASH: '#ffffff',
-      TIMER_BG: '#ffd700',
-      SCORE_BLUE: '#00eaff'
+      LIFE_GREEN: '#28e040', LIFE_YELLOW: '#ffd000', LIFE_RED: '#ff1b34', LIFE_GHOST: '#ff3019',
+      LIFE_BG: '#1a052b', FRAME_GOLD: '#f5c518', FRAME_PURPLE: '#260f38',
+      METER_CYAN: '#00f6ff', METER_BLUE: '#0055ff', SCORE_BLUE: '#00eaff'
     }
   };
 
-  // 2. RETRO SOUND SYNTHESIZER (Web Audio API)
   class SoundFX {
-    constructor() {
-      this.ctx = null;
-    }
+    constructor() { this.ctx = null; }
     init() {
       if (!this.ctx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        this.ctx = new AudioCtx();
+        if (AudioCtx) this.ctx = new AudioCtx();
       }
-      if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
-      }
+      if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
     }
     hit(heavy = false) {
       if (!this.ctx) return;
@@ -254,21 +264,6 @@
       gain.connect(this.ctx.destination);
       osc.start(t);
       osc.stop(t + (heavy ? 0.3 : 0.16));
-
-      const bufferSize = this.ctx.sampleRate * (heavy ? 0.1 : 0.05);
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      const noise = this.ctx.createBufferSource();
-      noise.buffer = buffer;
-      const noiseGain = this.ctx.createGain();
-      noiseGain.gain.setValueAtTime(heavy ? 0.35 : 0.2, t);
-      noiseGain.gain.exponentialRampToValueAtTime(0.01, t + (heavy ? 0.12 : 0.05));
-      noise.connect(noiseGain);
-      noiseGain.connect(this.ctx.destination);
-      noise.start(t);
     }
     whoosh() {
       if (!this.ctx) return;
@@ -300,41 +295,30 @@
       osc.start(t);
       osc.stop(t + 0.8);
     }
-    assistCall() {
+    roundStart() {
       if (!this.ctx) return;
       const t = this.ctx.currentTime;
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(587.33, t);
-      osc.frequency.setValueAtTime(880, t + 0.08);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(523.25, t);
+      osc.frequency.setValueAtTime(659.25, t + 0.1);
+      osc.frequency.setValueAtTime(783.99, t + 0.2);
       gain.gain.setValueAtTime(0.3, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.28);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start(t);
-      osc.stop(t + 0.3);
+      osc.stop(t + 0.5);
     }
   }
   const SFX = new SoundFX();
 
-  // 3. PARALLAX CARNIVAL AT DUSK BACKGROUND
   class BackgroundStage {
-    constructor() {
-      this.time = 0;
-      this.ferrisAngle = 0;
-      this.lightsPulse = 0;
-    }
-    update(dt) {
-      this.time += dt;
-      this.ferrisAngle += dt * 0.25;
-      this.lightsPulse = Math.sin(this.time * 6);
-    }
+    constructor() { this.time = 0; this.ferrisAngle = 0; }
+    update(dt) { this.time += dt; this.ferrisAngle += dt * 0.25; }
     render(ctx, cameraX) {
-      const W = CONFIG.INTERNAL_WIDTH;
-      const H = CONFIG.INTERNAL_HEIGHT;
-
-      // 1. Dusk Gradient Sky
+      const W = CONFIG.INTERNAL_WIDTH, H = CONFIG.INTERNAL_HEIGHT;
       const skyGrad = ctx.createLinearGradient(0, 0, 0, CONFIG.GROUND_Y);
       skyGrad.addColorStop(0, PALETTE.STAGE.SKY_TOP);
       skyGrad.addColorStop(0.35, PALETTE.STAGE.SKY_MID);
@@ -343,387 +327,143 @@
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, W, H);
 
-      // Distant Sunset Glow
-      ctx.save();
-      const sunsetGlow = ctx.createRadialGradient(W / 2 - cameraX * 0.05, CONFIG.GROUND_Y - 20, 10, W / 2 - cameraX * 0.05, CONFIG.GROUND_Y - 20, 220);
-      sunsetGlow.addColorStop(0, 'rgba(255, 230, 120, 0.45)');
-      sunsetGlow.addColorStop(0.4, 'rgba(255, 90, 50, 0.25)');
-      sunsetGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = sunsetGlow;
-      ctx.fillRect(0, 0, W, CONFIG.GROUND_Y);
-      ctx.restore();
-
-      // 2. Far Parallax Layer (Roller Coaster & Ferris Wheel)
-      const farOffset = -cameraX * 0.12;
-      ctx.save();
-      ctx.translate(farOffset, 0);
-
-      // Coaster track curves
-      ctx.strokeStyle = '#2d0f47';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-100, 260);
-      ctx.bezierCurveTo(100, 140, 250, 80, 420, 220);
-      ctx.bezierCurveTo(550, 310, 680, 100, 850, 250);
-      ctx.stroke();
-
-      // Coaster scaffolding
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = '#220b38';
-      for (let x = -80; x < 850; x += 32) {
-        ctx.beginPath();
-        ctx.moveTo(x, 260);
-        ctx.lineTo(x, 150 + Math.sin(x * 0.015) * 60);
-        ctx.stroke();
-      }
-
-      // Neon Ferris Wheel
-      const wheelX = 490;
-      const wheelY = 145;
-      const wheelRadius = 80;
-
+      const wheelX = 490 - cameraX * 0.12, wheelY = 145, wheelRadius = 80;
       ctx.strokeStyle = '#ff0077';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(wheelX, wheelY, wheelRadius, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.strokeStyle = '#00ffff';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(wheelX, wheelY, wheelRadius * 0.65, 0, Math.PI * 2);
-      ctx.stroke();
 
-      ctx.fillStyle = '#ffea00';
-      ctx.beginPath();
-      ctx.arc(wheelX, wheelY, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = '#1b0630';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(wheelX, wheelY);
-      ctx.lineTo(wheelX - 45, CONFIG.GROUND_Y);
-      ctx.moveTo(wheelX, wheelY);
-      ctx.lineTo(wheelX + 45, CONFIG.GROUND_Y);
-      ctx.stroke();
-
-      const cabins = 12;
-      for (let i = 0; i < cabins; i++) {
-        const ang = this.ferrisAngle + (i * Math.PI * 2) / cabins;
+      for (let i = 0; i < 12; i++) {
+        const ang = this.ferrisAngle + (i * Math.PI * 2) / 12;
         const cx = wheelX + Math.cos(ang) * wheelRadius;
         const cy = wheelY + Math.sin(ang) * wheelRadius;
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(wheelX, wheelY);
-        ctx.lineTo(cx, cy);
-        ctx.stroke();
-
-        const color = PALETTE.STAGE.WHEEL_LIGHTS[i % PALETTE.STAGE.WHEEL_LIGHTS.length];
-        ctx.fillStyle = color;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 8;
+        ctx.fillStyle = PALETTE.STAGE.WHEEL_LIGHTS[i % PALETTE.STAGE.WHEEL_LIGHTS.length];
         ctx.fillRect(cx - 3.5, cy - 3.5, 7, 7);
-        ctx.shadowBlur = 0;
       }
-      ctx.restore();
 
-      // 3. Mid Parallax Layer (Booths & Lampposts)
-      const midOffset = -cameraX * 0.35;
-      ctx.save();
-      ctx.translate(midOffset, 0);
-
-      this.drawCarnivalBooth(ctx, 40, 205, 130, '#ff0055', '#ffe600', 'JACKPOT!');
-      this.drawCarnivalBooth(ctx, 210, 215, 110, '#00e1ff', '#b000ff', 'ARCADE 2000');
-      this.drawCarnivalBooth(ctx, 480, 210, 140, '#ff7700', '#ff00aa', 'VERSUS CLASH');
-
-      this.drawLamppost(ctx, 15, CONFIG.GROUND_Y);
-      this.drawLamppost(ctx, 185, CONFIG.GROUND_Y);
-      this.drawLamppost(ctx, 350, CONFIG.GROUND_Y);
-      this.drawLamppost(ctx, 640, CONFIG.GROUND_Y);
-      ctx.restore();
-
-      // 4. Foreground Arena Ground
       const groundGrad = ctx.createLinearGradient(0, CONFIG.GROUND_Y, 0, H);
       groundGrad.addColorStop(0, '#261047');
-      groundGrad.addColorStop(0.2, '#150628');
       groundGrad.addColorStop(1, '#080112');
       ctx.fillStyle = groundGrad;
       ctx.fillRect(0, CONFIG.GROUND_Y, W, H - CONFIG.GROUND_Y);
 
-      // Neon Rim line
       ctx.strokeStyle = '#00f6ff';
       ctx.lineWidth = 3;
-      ctx.shadowColor = '#00f6ff';
-      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.moveTo(0, CONFIG.GROUND_Y);
       ctx.lineTo(W, CONFIG.GROUND_Y);
       ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Checkerboard perspective floor tiles
-      ctx.strokeStyle = 'rgba(255, 0, 140, 0.28)';
-      ctx.lineWidth = 1;
-      const numLines = 18;
-      const vpX = W / 2 - cameraX * 0.4;
-      for (let i = -numLines; i <= numLines + 5; i++) {
-        const xBottom = W / 2 + i * 55 - cameraX;
-        ctx.beginPath();
-        ctx.moveTo(vpX, CONFIG.GROUND_Y - 20);
-        ctx.lineTo(xBottom, H);
-        ctx.stroke();
-      }
-
-      for (let y = CONFIG.GROUND_Y + 10; y < H; y += (y - CONFIG.GROUND_Y) * 0.5 + 8) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(W, y);
-        ctx.stroke();
-      }
-    }
-
-    drawCarnivalBooth(ctx, x, y, width, color1, color2, signText) {
-      const height = CONFIG.GROUND_Y - y;
-      ctx.fillStyle = '#170929';
-      ctx.fillRect(x + 10, y + 36, width - 20, height - 36);
-
-      const stripes = 6;
-      const stripeW = width / stripes;
-      for (let s = 0; s < stripes; s++) {
-        ctx.fillStyle = s % 2 === 0 ? color1 : color2;
-        ctx.beginPath();
-        ctx.moveTo(x + s * stripeW, y + 36);
-        ctx.lineTo(x + (s + 1) * stripeW, y + 36);
-        ctx.lineTo(x + (s + 0.8) * stripeW, y + 10);
-        ctx.lineTo(x + (s - 0.2) * stripeW, y + 10);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      ctx.fillStyle = '#0a0314';
-      ctx.fillRect(x + 12, y - 10, width - 24, 18);
-      ctx.strokeStyle = color1;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x + 12, y - 10, width - 24, 18);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 9px Impact, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.shadowColor = color2;
-      ctx.shadowBlur = 6;
-      ctx.fillText(signText, x + width / 2, y + 3);
-      ctx.shadowBlur = 0;
-    }
-
-    drawLamppost(ctx, x, y) {
-      ctx.strokeStyle = '#2a1147';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x, y - 85);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(x - 9, y - 80);
-      ctx.lineTo(x + 9, y - 80);
-      ctx.stroke();
-
-      ctx.fillStyle = '#ffeaa7';
-      ctx.beginPath();
-      ctx.arc(x, y - 86, 5, 0, Math.PI * 2);
-      ctx.fill();
-
-      const glow = ctx.createRadialGradient(x, y - 86, 2, x, y - 86, 26);
-      glow.addColorStop(0, 'rgba(255, 235, 130, 0.6)');
-      glow.addColorStop(0.5, 'rgba(255, 120, 50, 0.2)');
-      glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(x, y - 86, 26, 0, Math.PI * 2);
-      ctx.fill();
     }
   }
 
-  // 4. PROCEDURAL SPRITE CHARACTERS
   class Fighter {
     constructor(id, name, palette, startX, facing) {
-      this.id = id;
-      this.name = name;
-      this.palette = palette;
-      this.x = startX;
-      this.y = CONFIG.GROUND_Y;
-      this.vx = 0;
-      this.vy = 0;
-      this.facing = facing;
-      this.isGrounded = true;
-
-      this.health = CONFIG.MAX_HEALTH;
-      this.lagHealth = CONFIG.MAX_HEALTH;
-      this.meter = 75;
-      this.meterLevel = 0;
-
-      this.state = 'idle';
-      this.stateTimer = 0;
-      this.animTimer = 0;
-      this.hitstun = 0;
-      this.isAttacking = false;
-      this.hasHit = false;
-
-      this.width = 46;
-      this.height = 84;
+      this.id = id; this.name = name; this.palette = palette; this.startX = startX; this.facing = facing;
+      this.reset();
     }
-
+    reset() {
+      this.x = this.startX; this.y = CONFIG.GROUND_Y; this.vx = 0; this.vy = 0;
+      this.isGrounded = true; this.health = CONFIG.MAX_HEALTH; this.lagHealth = CONFIG.MAX_HEALTH;
+      this.meter = 75; this.meterLevel = 0; this.state = 'idle'; this.stateTimer = 0; this.animTimer = 0;
+      this.isAttacking = false; this.hasHit = false; this.width = 46; this.height = 84;
+    }
     update(dt, opponent, effects) {
-      this.stateTimer += dt;
-      this.animTimer += dt * 8;
-
+      this.stateTimer += dt; this.animTimer += dt * 8;
       this.meter = Math.min(CONFIG.MAX_METER, this.meter + dt * 4);
       this.meterLevel = Math.floor(this.meter / 100);
 
       if (this.lagHealth > this.health) {
         this.lagHealth = Math.max(this.health, this.lagHealth - dt * 180);
       }
-
       if (!this.isGrounded) {
-        this.vy += CONFIG.GRAVITY;
-        this.y += this.vy;
-        this.x += this.vx;
-
+        this.vy += CONFIG.GRAVITY; this.y += this.vy; this.x += this.vx;
         if (this.y >= CONFIG.GROUND_Y) {
-          this.y = CONFIG.GROUND_Y;
-          this.vy = 0;
-          this.vx = 0;
-          this.isGrounded = true;
+          this.y = CONFIG.GROUND_Y; this.vy = 0; this.vx = 0; this.isGrounded = true;
           effects.addDust(this.x, this.y);
           if (this.state === 'jump') this.setState('idle');
         }
       } else {
-        this.x += this.vx;
-        this.vx *= 0.85;
+        this.x += this.vx; this.vx *= 0.85;
       }
 
       const padding = 36;
       if (this.x < padding) this.x = padding;
       if (this.x > CONFIG.INTERNAL_WIDTH - padding) this.x = CONFIG.INTERNAL_WIDTH - padding;
-
-      if (this.state === 'idle' || this.state === 'walk' || this.state === 'crouch') {
-        this.facing = this.x < opponent.x ? 1 : -1;
-      }
+      if (this.state === 'idle' || this.state === 'walk') this.facing = this.x < opponent.x ? 1 : -1;
 
       if (this.state === 'light_atk') {
-        if (this.stateTimer > 0.22) {
-          this.setState('idle');
-        } else if (!this.hasHit && this.stateTimer > 0.06 && this.stateTimer < 0.16) {
+        if (this.stateTimer > 0.22) this.setState('idle');
+        else if (!this.hasHit && this.stateTimer > 0.06 && this.stateTimer < 0.16) {
           this.checkAttackCollision(opponent, 45, 60, 48, 12, false, effects);
         }
       } else if (this.state === 'heavy_atk') {
-        if (this.stateTimer > 0.44) {
-          this.setState('idle');
-        } else if (!this.hasHit && this.stateTimer > 0.12 && this.stateTimer < 0.3) {
+        if (this.stateTimer > 0.44) this.setState('idle');
+        else if (!this.hasHit && this.stateTimer > 0.12 && this.stateTimer < 0.3) {
           this.checkAttackCollision(opponent, 110, 110, 58, 24, true, effects);
         }
       } else if (this.state === 'super_atk') {
-        if (this.stateTimer > 1.1) {
-          this.setState('idle');
-        } else {
-          if (Math.floor(this.stateTimer * 30) % 5 === 0) {
-            this.checkAttackCollision(opponent, 35, 300, 28, 6, true, effects, true);
-          }
+        if (this.stateTimer > 1.1) this.setState('idle');
+        else if (Math.floor(this.stateTimer * 30) % 5 === 0) {
+          this.checkAttackCollision(opponent, 35, 300, 28, 6, true, effects, true);
         }
-      } else if (this.state === 'hit') {
-        if (this.stateTimer > 0.28) {
-          this.setState('idle');
-        }
+      } else if (this.state === 'hit' && this.stateTimer > 0.28) {
+        this.setState('idle');
       }
     }
-
     setState(newState) {
       if (this.state === 'ko') return;
-      this.state = newState;
-      this.stateTimer = 0;
-      this.hasHit = false;
-      this.isAttacking = newState.includes('atk');
+      this.state = newState; this.stateTimer = 0; this.hasHit = false; this.isAttacking = newState.includes('atk');
     }
-
     takeDamage(amount, isHeavy, effects) {
       this.health = Math.max(0, this.health - amount);
       this.setState('hit');
       this.vx = -this.facing * (isHeavy ? 7 : 3.5);
       this.meter = Math.min(CONFIG.MAX_METER, this.meter + 15);
-
       SFX.hit(isHeavy);
       effects.addScreenShake(isHeavy ? 12 : 6, isHeavy ? 0.24 : 0.14);
-
       if (this.health <= 0) {
         this.setState('ko');
         effects.addSuperFlash();
       }
     }
-
     checkAttackCollision(opponent, damage, rangeX, rangeY, sparkY, isHeavy, effects, isSuper = false) {
       if (opponent.state === 'ko') return;
-
       const hitboxX = this.facing === 1 ? this.x + 10 : this.x - 10 - rangeX;
       const hitboxY = this.y - 70;
-
       const oppX = opponent.x - opponent.width / 2;
       const oppY = opponent.y - opponent.height;
-      const oppW = opponent.width;
-      const oppH = opponent.height;
-
-      if (
-        hitboxX < oppX + oppW &&
-        hitboxX + rangeX > oppX &&
-        hitboxY < oppY + oppH &&
-        hitboxY + rangeY > oppY
-      ) {
+      if (hitboxX < oppX + opponent.width && hitboxX + rangeX > oppX && hitboxY < oppY + opponent.height && hitboxY + rangeY > oppY) {
         if (!isSuper) this.hasHit = true;
         opponent.takeDamage(damage, isHeavy, effects);
         effects.addHitSpark(opponent.x - this.facing * 8, this.y - 50 + sparkY, isHeavy || isSuper);
         this.meter = Math.min(CONFIG.MAX_METER, this.meter + (isHeavy ? 25 : 12));
       }
     }
-
     jump() {
       if (this.isGrounded && this.state !== 'ko' && !this.isAttacking) {
-        this.vy = -14.5;
-        this.isGrounded = false;
-        this.setState('jump');
-        SFX.whoosh();
+        this.vy = -14.5; this.isGrounded = false; this.setState('jump'); SFX.whoosh();
       }
     }
-
     lightAttack() {
       if (this.isGrounded && !this.isAttacking && this.state !== 'hit' && this.state !== 'ko') {
-        this.setState('light_atk');
-        SFX.whoosh();
+        this.setState('light_atk'); SFX.whoosh();
       }
     }
-
     heavyAttack() {
       if (this.isGrounded && !this.isAttacking && this.state !== 'hit' && this.state !== 'ko') {
-        this.setState('heavy_atk');
-        SFX.whoosh();
+        this.setState('heavy_atk'); SFX.whoosh();
       }
     }
-
     hyperSuperAttack(effects) {
       if (this.isGrounded && !this.isAttacking && this.state !== 'hit' && this.state !== 'ko' && this.meter >= 100) {
-        this.meter -= 100;
-        this.setState('super_atk');
-        SFX.superBeam();
-        effects.addSuperFlash();
-        effects.addSpeedLines();
+        this.meter -= 100; this.setState('super_atk'); SFX.superBeam(); effects.addSuperFlash(); effects.addSpeedLines();
       }
     }
-
     render(ctx) {
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.scale(this.facing, 1);
-
       ctx.fillStyle = 'rgba(8, 2, 20, 0.45)';
       ctx.beginPath();
       ctx.ellipse(0, 0, 24, 7, 0, 0, Math.PI * 2);
@@ -731,865 +471,391 @@
 
       const bob = this.state === 'idle' ? Math.sin(this.animTimer * 0.8) * 2.5 : 0;
       const p = this.palette;
+      ctx.lineJoin = 'miter';
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = PALETTE.OUTLINE;
 
       if (this.id === 'kai') {
-        this.renderKai(ctx, bob, p);
-      } else {
-        this.renderVexa(ctx, bob, p);
-      }
+        ctx.fillStyle = p.GI_SHADOW;
+        ctx.fillRect(-18, -42 + bob, 12, 42); ctx.strokeRect(-18, -42 + bob, 12, 42);
+        ctx.fillStyle = p.GI_BASE;
+        ctx.fillRect(4, -44 + (this.state === 'heavy_atk' ? -18 : 0), 14, 44);
+        ctx.strokeRect(4, -44 + (this.state === 'heavy_atk' ? -18 : 0), 14, 44);
+        const torsoY = -74 + bob;
+        ctx.fillStyle = p.GI_BASE;
+        ctx.fillRect(-14, torsoY, 28, 34); ctx.strokeRect(-14, torsoY, 28, 34);
+        ctx.fillStyle = p.BELT_BASE;
+        ctx.fillRect(-15, torsoY + 28, 30, 7); ctx.strokeRect(-15, torsoY + 28, 30, 7);
+        const headY = torsoY - 20;
+        ctx.fillStyle = this.state === 'hit' ? '#ff8888' : p.SKIN_BASE;
+        ctx.fillRect(-8, headY, 17, 18); ctx.strokeRect(-8, headY, 17, 18);
+        ctx.fillStyle = p.ENERGY;
+        ctx.fillRect(-2, headY + 5, 9, 4);
+        ctx.fillStyle = p.HAIR_BASE;
+        ctx.beginPath();
+        ctx.moveTo(-16, headY + 4); ctx.lineTo(-24, headY - 14); ctx.lineTo(-12, headY - 10);
+        ctx.lineTo(-6, headY - 26); ctx.lineTo(4, headY - 12); ctx.lineTo(16, headY - 24);
+        ctx.lineTo(13, headY - 3); ctx.lineTo(8, headY + 6); ctx.closePath(); ctx.fill(); ctx.stroke();
 
+        if (this.state === 'light_atk') {
+          ctx.fillStyle = p.GLOVE_BASE;
+          ctx.fillRect(8, torsoY + 2, 44, 16); ctx.strokeRect(8, torsoY + 2, 44, 16);
+          ctx.fillStyle = p.ENERGY; ctx.fillRect(58, torsoY + 2, 14, 14);
+        } else if (this.state === 'heavy_atk') {
+          ctx.fillStyle = p.GLOVE_BASE;
+          ctx.fillRect(2, torsoY - 35, 18, 38); ctx.strokeRect(2, torsoY - 35, 18, 38);
+        } else {
+          ctx.fillStyle = p.GLOVE_BASE;
+          ctx.fillRect(10, torsoY + 8, 14, 20); ctx.strokeRect(10, torsoY + 8, 14, 20);
+        }
+        if (this.state === 'super_atk') {
+          ctx.save(); ctx.shadowColor = p.ENERGY; ctx.shadowBlur = 20;
+          ctx.fillStyle = p.ENERGY; ctx.fillRect(40, torsoY - 14, 460, 48);
+          ctx.restore();
+        }
+      } else {
+        ctx.fillStyle = p.ARMOR_SHADOW;
+        ctx.fillRect(-16, -42 + bob, 12, 42); ctx.strokeRect(-16, -42 + bob, 12, 42);
+        ctx.fillStyle = p.ARMOR_BASE;
+        ctx.fillRect(2, -44, 13, 44); ctx.strokeRect(2, -44, 13, 44);
+        const torsoY = -72 + bob;
+        ctx.fillStyle = p.ARMOR_BASE;
+        ctx.fillRect(-12, torsoY, 24, 32); ctx.strokeRect(-12, torsoY, 24, 32);
+        const headY = torsoY - 18;
+        ctx.fillStyle = this.state === 'hit' ? '#ff8888' : p.SKIN_BASE;
+        ctx.fillRect(-6, headY, 15, 16); ctx.strokeRect(-6, headY, 15, 16);
+        ctx.fillStyle = p.HAIR_BASE;
+        ctx.beginPath();
+        ctx.moveTo(-14, headY); ctx.lineTo(-28 + Math.cos(this.animTimer) * 4, headY + 12);
+        ctx.lineTo(-12, headY + 18); ctx.lineTo(-4, headY - 16); ctx.lineTo(8, headY - 8);
+        ctx.lineTo(14, headY + 6); ctx.lineTo(4, headY + 16); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        if (this.state === 'light_atk') {
+          ctx.fillStyle = p.ARMOR_BASE;
+          ctx.fillRect(6, torsoY + 2, 42, 12); ctx.strokeRect(6, torsoY + 2, 42, 12);
+          ctx.fillStyle = p.ENERGY; ctx.beginPath(); ctx.moveTo(48, torsoY - 2); ctx.lineTo(66, torsoY + 8); ctx.lineTo(48, torsoY + 18); ctx.closePath(); ctx.fill();
+        } else if (this.state === 'heavy_atk') {
+          ctx.fillStyle = p.ARMOR_BASE;
+          ctx.fillRect(4, torsoY - 32, 14, 38); ctx.strokeRect(4, torsoY - 32, 14, 38);
+        } else {
+          ctx.fillStyle = p.ARMOR_BASE;
+          ctx.fillRect(8, torsoY + 6, 12, 18); ctx.strokeRect(8, torsoY + 6, 12, 18);
+        }
+        if (this.state === 'super_atk') {
+          ctx.save(); ctx.shadowColor = p.ENERGY; ctx.shadowBlur = 24; ctx.fillStyle = p.ENERGY;
+          ctx.beginPath(); ctx.arc(0, torsoY + 10, 65, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+      }
       ctx.restore();
-    }
-
-    renderKai(ctx, bob, p) {
-      const isAttackingLight = this.state === 'light_atk';
-      const isAttackingHeavy = this.state === 'heavy_atk';
-      const isSuper = this.state === 'super_atk';
-      const isHit = this.state === 'hit';
-
-      ctx.lineJoin = 'miter';
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = PALETTE.OUTLINE;
-
-      // 1. Back leg
-      ctx.fillStyle = p.GI_SHADOW;
-      ctx.fillRect(-18, -42 + bob, 12, 42);
-      ctx.strokeRect(-18, -42 + bob, 12, 42);
-      ctx.fillStyle = p.GLOVE_SHADOW;
-      ctx.fillRect(-22, -8, 16, 8);
-      ctx.strokeRect(-22, -8, 16, 8);
-
-      // 2. Front leg
-      ctx.fillStyle = p.GI_BASE;
-      ctx.fillRect(4, -44 + (isAttackingHeavy ? -18 : 0), 14, 44);
-      ctx.strokeRect(4, -44 + (isAttackingHeavy ? -18 : 0), 14, 44);
-      ctx.fillStyle = p.GI_HI;
-      ctx.fillRect(5, -42 + (isAttackingHeavy ? -18 : 0), 4, 34);
-      ctx.fillStyle = p.GLOVE_BASE;
-      ctx.fillRect(3, -9, 17, 9);
-      ctx.strokeRect(3, -9, 17, 9);
-
-      // 3. Torso & Gi
-      const torsoY = -74 + bob;
-      ctx.fillStyle = p.GI_BASE;
-      ctx.fillRect(-14, torsoY, 28, 34);
-      ctx.strokeRect(-14, torsoY, 28, 34);
-
-      ctx.fillStyle = p.SKIN_BASE;
-      ctx.beginPath();
-      ctx.moveTo(-7, torsoY);
-      ctx.lineTo(7, torsoY);
-      ctx.lineTo(0, torsoY + 18);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = p.GI_SHADOW;
-      ctx.fillRect(5, torsoY + 4, 8, 28);
-
-      ctx.fillStyle = p.BELT_BASE;
-      ctx.fillRect(-15, torsoY + 28, 30, 7);
-      ctx.strokeRect(-15, torsoY + 28, 30, 7);
-      ctx.fillStyle = p.BELT_SHADOW;
-      ctx.fillRect(-6, torsoY + 34, 5, 16);
-      ctx.fillRect(1, torsoY + 34, 5, 14);
-
-      // 4. Head & Hair
-      const headY = torsoY - 20;
-      ctx.fillStyle = p.SKIN_SHADOW;
-      ctx.fillRect(-5, headY + 15, 10, 8);
-
-      ctx.fillStyle = isHit ? '#ff8888' : p.SKIN_BASE;
-      ctx.fillRect(-8, headY, 17, 18);
-      ctx.strokeRect(-8, headY, 17, 18);
-
-      ctx.fillStyle = p.ENERGY;
-      ctx.shadowColor = p.ENERGY;
-      ctx.shadowBlur = 8;
-      ctx.fillRect(-2, headY + 5, 9, 4);
-      ctx.shadowBlur = 0;
-
-      ctx.fillStyle = p.HAIR_BASE;
-      ctx.beginPath();
-      ctx.moveTo(-16, headY + 4);
-      ctx.lineTo(-24, headY - 14);
-      ctx.lineTo(-12, headY - 10);
-      ctx.lineTo(-6, headY - 26);
-      ctx.lineTo(4, headY - 12);
-      ctx.lineTo(16, headY - 24);
-      ctx.lineTo(13, headY - 3);
-      ctx.lineTo(8, headY + 6);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = p.HAIR_HI;
-      ctx.beginPath();
-      ctx.moveTo(-5, headY - 22);
-      ctx.lineTo(2, headY - 10);
-      ctx.lineTo(-9, headY - 8);
-      ctx.closePath();
-      ctx.fill();
-
-      // 5. Arms & Gauntlets
-      if (isAttackingLight) {
-        ctx.fillStyle = p.GLOVE_BASE;
-        ctx.fillRect(8, torsoY + 2, 44, 16);
-        ctx.strokeRect(8, torsoY + 2, 44, 16);
-        ctx.fillStyle = p.GLOVE_HI;
-        ctx.fillRect(44, torsoY - 2, 18, 22);
-        ctx.strokeRect(44, torsoY - 2, 18, 22);
-        ctx.fillStyle = p.ENERGY;
-        ctx.fillRect(58, torsoY + 2, 14, 14);
-      } else if (isAttackingHeavy) {
-        ctx.fillStyle = p.GLOVE_BASE;
-        ctx.fillRect(2, torsoY - 35, 18, 38);
-        ctx.strokeRect(2, torsoY - 35, 18, 38);
-        ctx.fillStyle = p.GLOVE_HI;
-        ctx.fillRect(2, torsoY - 48, 20, 16);
-        ctx.strokeRect(2, torsoY - 48, 20, 16);
-      } else {
-        ctx.fillStyle = p.GLOVE_SHADOW;
-        ctx.fillRect(-22, torsoY + 6, 12, 22);
-        ctx.strokeRect(-22, torsoY + 6, 12, 22);
-
-        ctx.fillStyle = p.GLOVE_BASE;
-        ctx.fillRect(10, torsoY + 8, 14, 20);
-        ctx.strokeRect(10, torsoY + 8, 14, 20);
-        ctx.fillStyle = p.GLOVE_HI;
-        ctx.fillRect(12, torsoY + 2, 14, 14);
-        ctx.strokeRect(12, torsoY + 2, 14, 14);
-
-        ctx.fillStyle = p.ENERGY;
-        ctx.fillRect(16, torsoY + 12, 4, 8);
-      }
-
-      // 6. Hyper Beam Blast
-      if (isSuper) {
-        ctx.save();
-        ctx.shadowColor = p.ENERGY;
-        ctx.shadowBlur = 20;
-
-        const beamGrad = ctx.createLinearGradient(30, 0, 400, 0);
-        beamGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        beamGrad.addColorStop(0.3, p.ENERGY);
-        beamGrad.addColorStop(1, 'rgba(0, 180, 255, 0)');
-
-        ctx.fillStyle = beamGrad;
-        ctx.fillRect(40, torsoY - 14, 460, 48);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(40, torsoY - 4, 420, 28);
-        ctx.restore();
-      }
-    }
-
-    renderVexa(ctx, bob, p) {
-      const isAttackingLight = this.state === 'light_atk';
-      const isAttackingHeavy = this.state === 'heavy_atk';
-      const isHit = this.state === 'hit';
-      const isSuper = this.state === 'super_atk';
-
-      ctx.lineJoin = 'miter';
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = PALETTE.OUTLINE;
-
-      // 1. Cape
-      ctx.fillStyle = p.CAPE_SHADOW;
-      ctx.beginPath();
-      ctx.moveTo(-10, -70 + bob);
-      ctx.lineTo(-38 + Math.sin(this.animTimer) * 6, -10);
-      ctx.lineTo(-24, -5);
-      ctx.lineTo(-2, -60 + bob);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // 2. Legs
-      ctx.fillStyle = p.ARMOR_SHADOW;
-      ctx.fillRect(-16, -42 + bob, 12, 42);
-      ctx.strokeRect(-16, -42 + bob, 12, 42);
-
-      ctx.fillStyle = p.ARMOR_BASE;
-      ctx.fillRect(2, -44, 13, 44);
-      ctx.strokeRect(2, -44, 13, 44);
-      ctx.fillStyle = p.ARMOR_HI;
-      ctx.fillRect(3, -42, 4, 32);
-
-      // 3. Torso
-      const torsoY = -72 + bob;
-      ctx.fillStyle = p.ARMOR_BASE;
-      ctx.fillRect(-12, torsoY, 24, 32);
-      ctx.strokeRect(-12, torsoY, 24, 32);
-
-      ctx.fillStyle = p.ENERGY;
-      ctx.fillRect(-4, torsoY + 10, 8, 8);
-
-      // 4. Head & Hair
-      const headY = torsoY - 18;
-      ctx.fillStyle = isHit ? '#ff8888' : p.SKIN_BASE;
-      ctx.fillRect(-6, headY, 15, 16);
-      ctx.strokeRect(-6, headY, 15, 16);
-
-      ctx.fillStyle = p.HAIR_BASE;
-      ctx.fillRect(1, headY + 5, 5, 3);
-
-      ctx.fillStyle = p.HAIR_BASE;
-      ctx.beginPath();
-      ctx.moveTo(-14, headY);
-      ctx.lineTo(-28 + Math.cos(this.animTimer) * 4, headY + 12);
-      ctx.lineTo(-12, headY + 18);
-      ctx.lineTo(-4, headY - 16);
-      ctx.lineTo(8, headY - 8);
-      ctx.lineTo(14, headY + 6);
-      ctx.lineTo(4, headY + 16);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = p.HAIR_HI;
-      ctx.fillRect(-8, headY - 12, 10, 6);
-
-      // 5. Bladed Arms
-      if (isAttackingLight) {
-        ctx.fillStyle = p.ARMOR_BASE;
-        ctx.fillRect(6, torsoY + 2, 42, 12);
-        ctx.strokeRect(6, torsoY + 2, 42, 12);
-        ctx.fillStyle = p.ENERGY;
-        ctx.beginPath();
-        ctx.moveTo(48, torsoY - 2);
-        ctx.lineTo(66, torsoY + 8);
-        ctx.lineTo(48, torsoY + 18);
-        ctx.closePath();
-        ctx.fill();
-      } else if (isAttackingHeavy) {
-        ctx.fillStyle = p.ARMOR_BASE;
-        ctx.fillRect(4, torsoY - 32, 14, 38);
-        ctx.strokeRect(4, torsoY - 32, 14, 38);
-        ctx.strokeStyle = p.ENERGY;
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.arc(10, torsoY - 15, 42, -Math.PI * 0.4, Math.PI * 0.3);
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = p.ARMOR_BASE;
-        ctx.fillRect(8, torsoY + 6, 12, 18);
-        ctx.strokeRect(8, torsoY + 6, 12, 18);
-        ctx.fillStyle = p.ENERGY;
-        ctx.fillRect(10, torsoY + 8, 4, 12);
-      }
-
-      if (isSuper) {
-        ctx.save();
-        ctx.shadowColor = p.ENERGY;
-        ctx.shadowBlur = 24;
-        ctx.fillStyle = p.ENERGY;
-        ctx.beginPath();
-        ctx.arc(0, torsoY + 10, 65, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
     }
   }
 
-  // 5. VISUAL EFFECTS (Sparks, Shake, Combo counter)
   class EffectsManager {
-    constructor() {
-      this.sparks = [];
-      this.dust = [];
-      this.shakeDuration = 0;
-      this.shakeIntensity = 0;
-      this.superFlashTimer = 0;
-      this.speedLinesActive = 0;
-      this.comboHits = 0;
-      this.comboTimer = 0;
-    }
-
+    constructor() { this.sparks = []; this.dust = []; this.shakeDuration = 0; this.shakeIntensity = 0; this.superFlashTimer = 0; this.speedLinesActive = 0; this.comboHits = 0; this.comboTimer = 0; }
     addHitSpark(x, y, isHeavy) {
-      this.comboHits++;
-      this.comboTimer = 1.6;
-
-      const numParticles = isHeavy ? 18 : 10;
-      for (let i = 0; i < numParticles; i++) {
-        const ang = Math.PI * 2 * Math.random();
-        const spd = (Math.random() * 4 + 3) * (isHeavy ? 1.7 : 1.0);
-        this.sparks.push({
-          x: x,
-          y: y,
-          vx: Math.cos(ang) * spd,
-          vy: Math.sin(ang) * spd,
-          size: Math.random() * 4 + 3,
-          color: Math.random() > 0.4 ? '#ffea00' : (Math.random() > 0.5 ? '#00f6ff' : '#ffffff'),
-          life: 1.0,
-          decay: Math.random() * 3 + 4
-        });
+      this.comboHits++; this.comboTimer = 1.6;
+      for (let i = 0; i < (isHeavy ? 18 : 10); i++) {
+        const ang = Math.PI * 2 * Math.random(), spd = (Math.random() * 4 + 3) * (isHeavy ? 1.7 : 1.0);
+        this.sparks.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, size: Math.random() * 4 + 3, color: Math.random() > 0.4 ? '#ffea00' : '#00f6ff', life: 1.0, decay: Math.random() * 3 + 4 });
       }
-
-      this.sparks.push({
-        x: x,
-        y: y,
-        isBurst: true,
-        size: isHeavy ? 36 : 22,
-        life: 1.0,
-        decay: 12
-      });
+      this.sparks.push({ x, y, isBurst: true, size: isHeavy ? 36 : 22, life: 1.0, decay: 12 });
     }
-
-    addDust(x, y) {
-      for (let i = -1; i <= 1; i += 2) {
-        this.dust.push({
-          x: x + i * 8,
-          y: y - 2,
-          vx: i * (Math.random() * 2 + 1),
-          vy: -Math.random() * 1.5,
-          size: Math.random() * 5 + 4,
-          life: 1.0,
-          decay: 3.5
-        });
-      }
-    }
-
-    addScreenShake(intensity, duration) {
-      this.shakeIntensity = intensity;
-      this.shakeDuration = duration;
-    }
-
-    addSuperFlash() {
-      this.superFlashTimer = 0.22;
-    }
-
-    addSpeedLines() {
-      this.speedLinesActive = 0.6;
-    }
-
+    addDust(x, y) { for (let i = -1; i <= 1; i += 2) this.dust.push({ x: x + i * 8, y: y - 2, vx: i * 2, vy: -1, size: 5, life: 1.0, decay: 3.5 }); }
+    addScreenShake(intensity, duration) { this.shakeIntensity = intensity; this.shakeDuration = duration; }
+    addSuperFlash() { this.superFlashTimer = 0.22; }
+    addSpeedLines() { this.speedLinesActive = 0.6; }
     update(dt) {
       if (this.shakeDuration > 0) this.shakeDuration -= dt;
       if (this.superFlashTimer > 0) this.superFlashTimer -= dt;
       if (this.speedLinesActive > 0) this.speedLinesActive -= dt;
-
-      if (this.comboTimer > 0) {
-        this.comboTimer -= dt;
-        if (this.comboTimer <= 0) this.comboHits = 0;
-      }
-
+      if (this.comboTimer > 0) { this.comboTimer -= dt; if (this.comboTimer <= 0) this.comboHits = 0; }
       for (let i = this.sparks.length - 1; i >= 0; i--) {
-        const s = this.sparks[i];
-        s.life -= s.decay * dt;
-        if (!s.isBurst) {
-          s.x += s.vx;
-          s.y += s.vy;
-        }
+        const s = this.sparks[i]; s.life -= s.decay * dt; if (!s.isBurst) { s.x += s.vx; s.y += s.vy; }
         if (s.life <= 0) this.sparks.splice(i, 1);
       }
-
       for (let i = this.dust.length - 1; i >= 0; i--) {
-        const d = this.dust[i];
-        d.life -= d.decay * dt;
-        d.x += d.vx;
-        d.y += d.vy;
-        d.size *= 0.96;
+        const d = this.dust[i]; d.life -= d.decay * dt; d.x += d.vx; d.y += d.vy;
         if (d.life <= 0) this.dust.splice(i, 1);
       }
     }
-
     applyCamera(ctx) {
-      if (this.shakeDuration > 0) {
-        const offsetX = (Math.random() * 2 - 1) * this.shakeIntensity;
-        const offsetY = (Math.random() * 2 - 1) * this.shakeIntensity;
-        ctx.translate(offsetX, offsetY);
-      }
+      if (this.shakeDuration > 0) ctx.translate((Math.random() * 2 - 1) * this.shakeIntensity, (Math.random() * 2 - 1) * this.shakeIntensity);
     }
-
     render(ctx) {
-      if (this.speedLinesActive > 0) {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < 24; i++) {
-          const y = Math.random() * CONFIG.INTERNAL_HEIGHT;
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(CONFIG.INTERNAL_WIDTH, y + (Math.random() * 10 - 5));
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-
       for (const s of this.sparks) {
         if (s.isBurst) {
-          ctx.save();
-          ctx.translate(s.x, s.y);
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = '#ffe600';
-          ctx.shadowBlur = 12;
-
+          ctx.save(); ctx.translate(s.x, s.y); ctx.fillStyle = '#ffffff';
           ctx.beginPath();
           const r = s.size * s.life;
           for (let p = 0; p < 8; p++) {
-            const rad = (p * Math.PI) / 4;
-            const dist = p % 2 === 0 ? r : r * 0.35;
-            const px = Math.cos(rad) * dist;
-            const py = Math.sin(rad) * dist;
-            if (p === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
+            const rad = (p * Math.PI) / 4, dist = p % 2 === 0 ? r : r * 0.35;
+            const px = Math.cos(rad) * dist, py = Math.sin(rad) * dist;
+            if (p === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
           }
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
+          ctx.closePath(); ctx.fill(); ctx.restore();
         } else {
-          ctx.fillStyle = s.color;
-          ctx.fillRect(s.x, s.y, s.size * s.life, s.size * s.life);
+          ctx.fillStyle = s.color; ctx.fillRect(s.x, s.y, s.size * s.life, s.size * s.life);
         }
       }
-
-      ctx.fillStyle = 'rgba(210, 190, 230, 0.5)';
-      for (const d of this.dust) {
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
       if (this.superFlashTimer > 0) {
         ctx.fillStyle = `rgba(255, 255, 255, ${this.superFlashTimer * 3.5})`;
         ctx.fillRect(0, 0, CONFIG.INTERNAL_WIDTH, CONFIG.INTERNAL_HEIGHT);
       }
-
       if (this.comboHits >= 2) {
-        ctx.save();
-        ctx.textAlign = 'left';
-        ctx.font = '900 italic 28px Impact, sans-serif';
-
-        ctx.fillStyle = '#080112';
-        ctx.fillText(`${this.comboHits} HITS!`, 48, 126);
-
-        const textGrad = ctx.createLinearGradient(0, 100, 0, 130);
-        textGrad.addColorStop(0, '#fffb00');
-        textGrad.addColorStop(0.5, '#ff3b30');
-        textGrad.addColorStop(1, '#ff00aa');
-        ctx.fillStyle = textGrad;
-        ctx.fillText(`${this.comboHits} HITS!`, 46, 124);
-
-        ctx.font = 'bold italic 12px Impact, sans-serif';
-        ctx.fillStyle = '#00ffff';
-        ctx.fillText('FEVER COMBO!', 48, 142);
+        ctx.save(); ctx.font = '900 italic 28px Impact, sans-serif';
+        ctx.fillStyle = '#ffea00'; ctx.fillText(`${this.comboHits} HITS!`, 46, 124);
         ctx.restore();
       }
     }
   }
 
-  // 6. ARCADE FIGHTING GAME HUD (MvC2 Layout)
   class ArcadeHUD {
-    constructor() {
-      this.timer = CONFIG.TIMER_START;
-      this.timerTick = 0;
-    }
-
-    update(dt, isGameOver) {
-      if (!isGameOver) {
+    constructor() { this.timer = CONFIG.TIMER_START; this.timerTick = 0; }
+    reset() { this.timer = CONFIG.TIMER_START; this.timerTick = 0; }
+    update(dt, isGameOver, isIntro) {
+      if (!isGameOver && !isIntro) {
         this.timerTick += dt;
-        if (this.timerTick >= 1.0) {
-          this.timerTick = 0;
-          this.timer = Math.max(0, this.timer - 1);
-        }
+        if (this.timerTick >= 1.0) { this.timerTick = 0; this.timer = Math.max(0, this.timer - 1); }
       }
     }
-
-    render(ctx, p1, p2) {
+    render(ctx, p1, p2, introTimer) {
       const W = CONFIG.INTERNAL_WIDTH;
-
-      // 1. Score & FREE PLAY
       ctx.save();
       ctx.font = '900 italic 11px Impact, sans-serif';
       ctx.fillStyle = PALETTE.HUD.SCORE_BLUE;
-      ctx.shadowColor = '#00f6ff';
-      ctx.shadowBlur = 5;
       ctx.fillText('SCORE 1P: 00894200', 16, 16);
-
-      const blink = Math.floor(Date.now() / 450) % 2 === 0;
       ctx.textAlign = 'right';
-      ctx.fillStyle = blink ? PALETTE.HUD.FRAME_GOLD : '#ff7700';
-      ctx.shadowColor = '#ffea00';
-      ctx.shadowBlur = 6;
+      ctx.fillStyle = Math.floor(Date.now() / 450) % 2 === 0 ? PALETTE.HUD.FRAME_GOLD : '#ff7700';
       ctx.fillText('★ FREE PLAY ★', W - 16, 16);
       ctx.restore();
 
-      // 2. Health Bars
       this.drawHealthBar(ctx, p1, 14, 24, 240, false);
       this.drawHealthBar(ctx, p2, W - 14 - 240, 24, 240, true);
-
-      // 3. Center Timer
       this.drawCenterTimer(ctx, W / 2, 40, this.timer);
-
-      // 4. Super Meter Gauges
       this.drawSuperMeter(ctx, p1, 18, CONFIG.INTERNAL_HEIGHT - 32, 210, false);
       this.drawSuperMeter(ctx, p2, W - 18 - 210, CONFIG.INTERNAL_HEIGHT - 32, 210, true);
 
-      // 5. K.O. Announcement
+      if (introTimer > 0) {
+        ctx.save(); ctx.textAlign = 'center'; ctx.font = '900 italic 42px Impact, sans-serif';
+        ctx.fillStyle = introTimer > 1.0 ? '#00f6ff' : '#ffea00';
+        ctx.shadowColor = '#00f6ff'; ctx.shadowBlur = 15;
+        ctx.fillText(introTimer > 1.0 ? 'ROUND 1' : 'FIGHT!', W / 2, CONFIG.INTERNAL_HEIGHT / 2);
+        ctx.restore();
+      }
+
       if (p1.health <= 0 || p2.health <= 0 || this.timer === 0) {
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.font = '900 italic 46px Impact, sans-serif';
-
-        ctx.fillStyle = '#080112';
-        ctx.fillText('K. O. !', W / 2 + 3, CONFIG.INTERNAL_HEIGHT / 2 + 3);
-
-        const koGrad = ctx.createLinearGradient(0, CONFIG.INTERNAL_HEIGHT / 2 - 40, 0, CONFIG.INTERNAL_HEIGHT / 2 + 10);
-        koGrad.addColorStop(0, '#ffffff');
-        koGrad.addColorStop(0.3, '#ffea00');
-        koGrad.addColorStop(0.7, '#ff003c');
-        koGrad.addColorStop(1, '#770014');
-        ctx.fillStyle = koGrad;
-        ctx.shadowColor = '#ff003c';
-        ctx.shadowBlur = 20;
-        ctx.fillText('K. O. !', W / 2, CONFIG.INTERNAL_HEIGHT / 2);
-
-        ctx.font = 'bold italic 16px Impact, sans-serif';
+        ctx.save(); ctx.textAlign = 'center'; ctx.font = '900 italic 46px Impact, sans-serif';
+        ctx.fillStyle = '#ffea00'; ctx.shadowColor = '#ff003c'; ctx.shadowBlur = 20;
+        ctx.fillText('K. O. !', W / 2, CONFIG.INTERNAL_HEIGHT / 2 - 15);
+        ctx.font = 'bold italic 18px Impact, sans-serif';
         ctx.fillStyle = '#00f6ff';
-        ctx.fillText(p1.health > p2.health ? 'PLAYER 1 WINS!' : 'PLAYER 2 WINS!', W / 2, CONFIG.INTERNAL_HEIGHT / 2 + 32);
+        ctx.fillText(p1.health > p2.health ? 'PLAYER 1 WINS!' : 'PLAYER 2 WINS!', W / 2, CONFIG.INTERNAL_HEIGHT / 2 + 18);
         ctx.restore();
       }
     }
-
     drawHealthBar(ctx, fighter, x, y, width, isRightSide) {
-      const height = 18;
-      const slant = 14;
-
+      const height = 18, slant = 14;
       ctx.save();
       ctx.fillStyle = PALETTE.HUD.LIFE_BG;
       ctx.beginPath();
       if (!isRightSide) {
-        ctx.moveTo(x - slant, y);
-        ctx.lineTo(x + width, y);
-        ctx.lineTo(x + width - slant, y + height);
-        ctx.lineTo(x, y + height);
+        ctx.moveTo(x - slant, y); ctx.lineTo(x + width, y); ctx.lineTo(x + width - slant, y + height); ctx.lineTo(x, y + height);
       } else {
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + width + slant, y);
-        ctx.lineTo(x + width, y + height);
-        ctx.lineTo(x + slant, y + height);
+        ctx.moveTo(x, y); ctx.lineTo(x + width + slant, y); ctx.lineTo(x + width, y + height); ctx.lineTo(x + slant, y + height);
       }
-      ctx.closePath();
-      ctx.fill();
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = PALETTE.HUD.FRAME_PURPLE; ctx.lineWidth = 3; ctx.stroke();
 
-      ctx.strokeStyle = PALETTE.HUD.FRAME_PURPLE;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      const lagPct = fighter.lagHealth / CONFIG.MAX_HEALTH;
-      const lagW = (width - 4) * lagPct;
+      const lagW = (width - 4) * (fighter.lagHealth / CONFIG.MAX_HEALTH);
       ctx.fillStyle = PALETTE.HUD.LIFE_GHOST;
       ctx.fillRect(isRightSide ? x + width - lagW : x + 2, y + 2, lagW, height - 4);
 
-      const hpPct = fighter.health / CONFIG.MAX_HEALTH;
-      const hpW = (width - 4) * hpPct;
-
-      const hpGrad = ctx.createLinearGradient(x, 0, x + width, 0);
-      if (hpPct > 0.45) {
-        hpGrad.addColorStop(0, PALETTE.HUD.LIFE_GREEN);
-        hpGrad.addColorStop(0.7, PALETTE.HUD.LIFE_YELLOW);
-        hpGrad.addColorStop(1, PALETTE.HUD.LIFE_GREEN);
-      } else {
-        hpGrad.addColorStop(0, PALETTE.HUD.LIFE_RED);
-        hpGrad.addColorStop(1, PALETTE.HUD.LIFE_YELLOW);
-      }
-      ctx.fillStyle = hpGrad;
+      const hpW = (width - 4) * (fighter.health / CONFIG.MAX_HEALTH);
+      ctx.fillStyle = (fighter.health / CONFIG.MAX_HEALTH) > 0.4 ? PALETTE.HUD.LIFE_GREEN : PALETTE.HUD.LIFE_RED;
       ctx.fillRect(isRightSide ? x + width - hpW : x + 2, y + 2, hpW, height - 4);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.fillRect(isRightSide ? x + width - hpW : x + 2, y + 2, hpW, 3);
-
       const portraitX = isRightSide ? x + width + 8 : x - 32;
-      ctx.fillStyle = '#0c0418';
-      ctx.fillRect(portraitX, y - 2, 26, 26);
-      ctx.strokeStyle = PALETTE.HUD.FRAME_GOLD;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(portraitX, y - 2, 26, 26);
-
-      ctx.fillStyle = fighter.palette.HAIR_BASE;
-      ctx.fillRect(portraitX + 5, y + 3, 16, 16);
+      ctx.fillStyle = '#0c0418'; ctx.fillRect(portraitX, y - 2, 26, 26);
+      ctx.strokeStyle = PALETTE.HUD.FRAME_GOLD; ctx.lineWidth = 2; ctx.strokeRect(portraitX, y - 2, 26, 26);
+      ctx.fillStyle = fighter.palette.HAIR_BASE; ctx.fillRect(portraitX + 5, y + 3, 16, 16);
 
       ctx.textAlign = isRightSide ? 'right' : 'left';
       ctx.font = '900 italic 12px Impact, sans-serif';
       ctx.fillStyle = '#ffffff';
-      ctx.shadowColor = '#000000';
-      ctx.shadowBlur = 4;
       ctx.fillText(fighter.name, isRightSide ? x + width - 6 : x + 6, y + 14);
-
-      const assistY = y + height + 5;
-      const assistW = 60;
-      for (let a = 0; a < 2; a++) {
-        const ax = isRightSide ? x + width - (a + 1) * (assistW + 6) : x + a * (assistW + 6);
-        ctx.fillStyle = '#120420';
-        ctx.fillRect(ax, assistY, assistW, 5);
-        ctx.fillStyle = a === 0 ? '#00f6ff' : '#ff0077';
-        ctx.fillRect(ax, assistY, assistW * 0.9, 5);
-        ctx.strokeStyle = '#4b2170';
-        ctx.strokeRect(ax, assistY, assistW, 5);
-      }
-
       ctx.restore();
     }
-
     drawCenterTimer(ctx, cx, cy, time) {
       ctx.save();
-      ctx.fillStyle = '#120524';
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, 28, 22, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = PALETTE.HUD.FRAME_GOLD;
-      ctx.lineWidth = 3.5;
-      ctx.stroke();
-
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, 25, 19, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = '900 24px Impact, sans-serif';
-
-      if (time <= 10) {
-        ctx.fillStyle = '#ff1438';
-        ctx.shadowColor = '#ff1438';
-        ctx.shadowBlur = 8;
-      } else {
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#00f6ff';
-        ctx.shadowBlur = 6;
-      }
+      ctx.fillStyle = '#120524'; ctx.beginPath(); ctx.ellipse(cx, cy, 28, 22, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = PALETTE.HUD.FRAME_GOLD; ctx.lineWidth = 3.5; ctx.stroke();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 24px Impact, sans-serif';
+      ctx.fillStyle = time <= 10 ? '#ff1438' : '#ffffff';
       ctx.fillText(time.toString().padStart(2, '0'), cx, cy + 1);
-
-      ctx.font = 'bold italic 9px Impact, sans-serif';
-      ctx.fillStyle = PALETTE.HUD.FRAME_GOLD;
-      ctx.shadowBlur = 0;
+      ctx.font = 'bold italic 9px Impact, sans-serif'; ctx.fillStyle = PALETTE.HUD.FRAME_GOLD;
       ctx.fillText('ROUND 1', cx, cy + 24);
       ctx.restore();
     }
-
     drawSuperMeter(ctx, fighter, x, y, width, isRightSide) {
       const height = 14;
-
       ctx.save();
-      ctx.fillStyle = '#0f0520';
-      ctx.fillRect(x, y, width, height);
-      ctx.strokeStyle = '#5a2291';
-      ctx.lineWidth = 2.5;
-      ctx.strokeRect(x, y, width, height);
-
-      const meterPct = fighter.meter / CONFIG.MAX_METER;
-      const fillW = (width - 4) * meterPct;
-
-      const meterGrad = ctx.createLinearGradient(x, 0, x + width, 0);
-      meterGrad.addColorStop(0, PALETTE.HUD.METER_BLUE);
-      meterGrad.addColorStop(0.5, PALETTE.HUD.METER_CYAN);
-      meterGrad.addColorStop(1, '#ffffff');
-
-      ctx.fillStyle = meterGrad;
+      ctx.fillStyle = '#0f0520'; ctx.fillRect(x, y, width, height);
+      ctx.strokeStyle = '#5a2291'; ctx.lineWidth = 2.5; ctx.strokeRect(x, y, width, height);
+      const fillW = (width - 4) * (fighter.meter / CONFIG.MAX_METER);
+      ctx.fillStyle = PALETTE.HUD.METER_CYAN;
       ctx.fillRect(isRightSide ? x + width - fillW : x + 2, y + 2, fillW, height - 4);
-
-      ctx.strokeStyle = '#05020c';
-      ctx.lineWidth = 2;
-      for (let s = 1; s <= 2; s++) {
-        const sx = x + (width / 3) * s;
-        ctx.beginPath();
-        ctx.moveTo(sx, y);
-        ctx.lineTo(sx, y + height);
-        ctx.stroke();
-      }
-
-      const badgeX = isRightSide ? x - 18 : x + width + 18;
-      const badgeY = y + height / 2;
-
-      ctx.fillStyle = '#ffea00';
-      ctx.beginPath();
-      ctx.arc(badgeX, badgeY, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#992200';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      ctx.fillStyle = '#080112';
-      ctx.font = '900 italic 12px Impact, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      const badgeX = isRightSide ? x - 18 : x + width + 18, badgeY = y + height / 2;
+      ctx.fillStyle = '#ffea00'; ctx.beginPath(); ctx.arc(badgeX, badgeY, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#080112'; ctx.font = '900 italic 12px Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(`LV${fighter.meterLevel}`, badgeX, badgeY);
-
-      ctx.font = 'bold italic 9px Impact, sans-serif';
-      ctx.fillStyle = '#00f6ff';
-      ctx.textAlign = isRightSide ? 'right' : 'left';
-      ctx.fillText('HYPER COMBO GAUGE', isRightSide ? x + width : x, y - 4);
       ctx.restore();
     }
   }
 
-  // 7. INPUT HANDLER & SPARRING AI
-  class InputHandler {
-    constructor() {
-      this.keys = {};
-      window.addEventListener('keydown', (e) => {
-        this.keys[e.code] = true;
-        SFX.init();
-      });
-      window.addEventListener('keyup', (e) => {
-        this.keys[e.code] = false;
-      });
-    }
-
-    isDown(code) {
-      return !!this.keys[code];
-    }
-  }
-
-  // 8. GAME LOOP
   class Game {
     constructor() {
       this.canvas = document.getElementById('viewport');
       this.ctx = this.canvas.getContext('2d', { alpha: false });
-      this.input = new InputHandler();
-
+      this.keys = {};
       this.stage = new BackgroundStage();
       this.effects = new EffectsManager();
       this.hud = new ArcadeHUD();
-
       this.p1 = new Fighter('kai', 'VOLT-KAI', PALETTE.KAI, 180, 1);
       this.p2 = new Fighter('vexa', 'VEXA-9', PALETTE.VEXA, 460, -1);
-
       this.isAiEnabled = true;
       this.aiTimer = 0;
+      this.introTimer = 2.5;
       this.lastTime = performance.now();
+      this.rematchBanner = document.getElementById('rematch-banner');
 
+      this.initInput();
       this.initControls();
     }
+    restartMatch() {
+      this.p1.reset(); this.p2.reset(); this.hud.reset();
+      this.introTimer = 2.5; this.rematchBanner.style.display = 'none';
+      SFX.init(); SFX.roundStart();
+    }
+    initInput() {
+      window.addEventListener('keydown', (e) => {
+        this.keys[e.code] = true;
+        SFX.init();
+        const isGameOver = this.p1.health <= 0 || this.p2.health <= 0 || this.hud.timer === 0;
+        if (isGameOver && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyR')) {
+          this.restartMatch();
+        }
+      });
+      window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
 
+      const bindBtn = (id, keyCode) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const press = (e) => {
+          if (e.cancelable) e.preventDefault();
+          this.keys[keyCode] = true;
+          btn.classList.add('pressed');
+          SFX.init();
+        };
+        const release = (e) => {
+          if (e.cancelable) e.preventDefault();
+          this.keys[keyCode] = false;
+          btn.classList.remove('pressed');
+        };
+        btn.addEventListener('pointerdown', press);
+        btn.addEventListener('pointerup', release);
+        btn.addEventListener('pointercancel', release);
+      };
+
+      bindBtn('t-left', 'ArrowLeft');
+      bindBtn('t-right', 'ArrowRight');
+      bindBtn('t-jump', 'Space');
+      bindBtn('t-light', 'KeyZ');
+      bindBtn('t-heavy', 'KeyX');
+      bindBtn('t-super', 'KeyC');
+      bindBtn('t-assist', 'KeyV');
+
+      document.getElementById('btn-rematch').addEventListener('click', () => this.restartMatch());
+      document.getElementById('btn-restart-now').addEventListener('click', () => this.restartMatch());
+    }
     initControls() {
       const crtBtn = document.getElementById('toggle-crt');
       const crtOverlay = document.getElementById('crt');
-      crtBtn.addEventListener('click', () => {
-        crtOverlay.classList.toggle('disabled');
-      });
+      crtBtn.addEventListener('click', () => crtOverlay.classList.toggle('disabled'));
 
       const aiBtn = document.getElementById('toggle-ai');
       aiBtn.addEventListener('click', () => {
         this.isAiEnabled = !this.isAiEnabled;
-        aiBtn.innerText = this.isAiEnabled ? 'AI: AUTO' : 'AI: 2P MODE';
+        aiBtn.innerText = this.isAiEnabled ? 'AI: AUTO' : 'AI: OFF (P2)';
         aiBtn.style.background = this.isAiEnabled ? '#00d9ff' : '#ffe600';
       });
     }
-
     update(dt) {
       const cameraX = (this.p1.x + this.p2.x) / 2 - CONFIG.INTERNAL_WIDTH / 2;
       this.stage.update(dt);
       this.effects.update(dt);
+      if (this.introTimer > 0) this.introTimer -= dt;
 
       const isGameOver = this.p1.health <= 0 || this.p2.health <= 0 || this.hud.timer === 0;
-      this.hud.update(dt, isGameOver);
+      this.hud.update(dt, isGameOver, this.introTimer > 0);
 
-      if (!isGameOver) {
-        if (this.p1.state !== 'hit' && !this.p1.isAttacking) {
-          if (this.input.isDown('ArrowLeft')) {
-            this.p1.vx = -4.2;
-            this.p1.setState('walk');
-          } else if (this.input.isDown('ArrowRight')) {
-            this.p1.vx = 4.2;
-            this.p1.setState('walk');
-          } else if (this.p1.isGrounded) {
-            this.p1.vx = 0;
-            if (this.p1.state === 'walk') this.p1.setState('idle');
-          }
+      if (isGameOver) {
+        this.rematchBanner.style.display = 'flex';
+      } else {
+        this.rematchBanner.style.display = 'none';
+        if (this.introTimer <= 0 && this.p1.state !== 'hit' && !this.p1.isAttacking) {
+          if (this.keys['ArrowLeft']) { this.p1.vx = -4.2; this.p1.setState('walk'); }
+          else if (this.keys['ArrowRight']) { this.p1.vx = 4.2; this.p1.setState('walk'); }
+          else if (this.p1.isGrounded) { this.p1.vx = 0; if (this.p1.state === 'walk') this.p1.setState('idle'); }
 
-          if (this.input.isDown('Space') || this.input.isDown('ArrowUp')) {
-            this.p1.jump();
-          }
-
-          if (this.input.isDown('KeyZ')) {
-            this.p1.lightAttack();
-          } else if (this.input.isDown('KeyX')) {
-            this.p1.heavyAttack();
-          } else if (this.input.isDown('KeyC')) {
-            this.p1.hyperSuperAttack(this.effects);
-          } else if (this.input.isDown('KeyV')) {
-            SFX.assistCall();
-            this.effects.addSpeedLines();
-          }
+          if (this.keys['Space'] || this.keys['ArrowUp']) this.p1.jump();
+          if (this.keys['KeyZ']) this.p1.lightAttack();
+          else if (this.keys['KeyX']) this.p1.heavyAttack();
+          else if (this.keys['KeyC']) this.p1.hyperSuperAttack(this.effects);
+          else if (this.keys['KeyV']) this.effects.addSpeedLines();
         }
-
-        if (this.isAiEnabled) {
-          this.updateAi(dt);
-        } else {
-          if (this.p2.state !== 'hit' && !this.p2.isAttacking) {
-            if (this.input.isDown('KeyJ')) this.p2.vx = -4.2;
-            else if (this.input.isDown('KeyL')) this.p2.vx = 4.2;
-            else if (this.p2.isGrounded) this.p2.vx = 0;
-
-            if (this.input.isDown('KeyI')) this.p2.jump();
-            if (this.input.isDown('KeyB')) this.p2.lightAttack();
-            if (this.input.isDown('KeyN')) this.p2.heavyAttack();
-            if (this.input.isDown('KeyM')) this.p2.hyperSuperAttack(this.effects);
-          }
-        }
+        if (this.introTimer <= 0 && this.isAiEnabled) this.updateAi(dt);
       }
-
       this.p1.update(dt, this.p2, this.effects);
       this.p2.update(dt, this.p1, this.effects);
     }
-
     updateAi(dt) {
       if (this.p2.state === 'hit' || this.p2.isAttacking || this.p2.state === 'ko') return;
-
       this.aiTimer += dt;
       const dist = Math.abs(this.p1.x - this.p2.x);
-
-      if (dist > 140) {
-        this.p2.vx = this.p2.x > this.p1.x ? -2.8 : 2.8;
+      if (dist > 150) {
+        this.p2.vx = this.p2.x > this.p1.x ? -2.5 : 2.5;
         this.p2.setState('walk');
       } else {
         this.p2.vx = 0;
-        if (this.aiTimer > 0.45) {
+        if (this.aiTimer > 0.8) {
           this.aiTimer = 0;
           const choice = Math.random();
-          if (choice < 0.45) {
-            this.p2.lightAttack();
-          } else if (choice < 0.8) {
-            this.p2.heavyAttack();
-          } else if (this.p2.meter >= 100) {
-            this.p2.hyperSuperAttack(this.effects);
-          } else if (choice < 0.95) {
-            this.p2.jump();
-          }
+          if (choice < 0.4) this.p2.lightAttack();
+          else if (choice < 0.7) this.p2.heavyAttack();
+          else if (this.p2.meter >= 100 && choice < 0.85) this.p2.hyperSuperAttack(this.effects);
+          else if (choice < 0.95) this.p2.jump();
         }
       }
     }
-
     render() {
       const cameraX = (this.p1.x + this.p2.x) / 2 - CONFIG.INTERNAL_WIDTH / 2;
-
       this.ctx.save();
       this.effects.applyCamera(this.ctx);
-
       this.stage.render(this.ctx, cameraX);
       this.p1.render(this.ctx);
       this.p2.render(this.ctx);
       this.effects.render(this.ctx);
-      this.hud.render(this.ctx, this.p1, this.p2);
-
+      this.hud.render(this.ctx, this.p1, this.p2, this.introTimer);
       this.ctx.restore();
     }
-
     loop(time) {
       const dt = Math.min(0.05, (time - this.lastTime) / 1000);
       this.lastTime = time;
-
       this.update(dt);
       this.render();
-
       requestAnimationFrame((t) => this.loop(t));
     }
-
-    start() {
-      requestAnimationFrame((t) => this.loop(t));
-    }
+    start() { requestAnimationFrame((t) => this.loop(t)); }
   }
 
   window.addEventListener('load', () => {
